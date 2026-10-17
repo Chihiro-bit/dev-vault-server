@@ -1,0 +1,41 @@
+# 一键部署：MySQL + DevVault 服务端
+#   cp .env.example .env   # 修改其中的密码
+#   docker compose up -d
+# 服务默认监听 127.0.0.1:8080，请在前面加一层 HTTPS 反向代理后再对外提供服务（见 README.md）
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: devvault
+      MYSQL_USER: devvault
+      MYSQL_PASSWORD: ${DB_PASSWORD:?请在 .env 中设置 DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?请在 .env 中设置 DB_ROOT_PASSWORD}
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-udevvault", "-p${DB_PASSWORD}"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  server:
+    build: .
+    image: devvault-server
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DEVVAULT_DB_URL: jdbc:mysql://mysql:3306/devvault?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
+      DEVVAULT_DB_USER: devvault
+      DEVVAULT_DB_PASSWORD: ${DB_PASSWORD}
+      DEVVAULT_NAME: ${SERVER_NAME:-DevVault}
+      DEVVAULT_ALLOW_REGISTRATION: ${ALLOW_REGISTRATION:-true}
+      DEVVAULT_TRUST_PROXY: ${TRUST_PROXY:-true}
+    ports:
+      - "127.0.0.1:${PORT:-8080}:8080"
+
+volumes:
+  mysql-data:

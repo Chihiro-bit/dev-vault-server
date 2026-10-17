@@ -1,0 +1,10 @@
+.gradle/
+build/
+.kotlin/
+.idea/
+*.iml
+local.properties
+
+# 部署配置（含数据库密码），示例文件需要提交
+.env
+!.env.example
