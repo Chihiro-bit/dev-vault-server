@@ -1,7 +1,6 @@
 dependencies {
     api(project(":core"))
     api(libs.exposed.core)
-    api(libs.coroutines.core)
     implementation(libs.exposed.jdbc)
     implementation(libs.exposed.javatime)
     implementation(libs.hikari)

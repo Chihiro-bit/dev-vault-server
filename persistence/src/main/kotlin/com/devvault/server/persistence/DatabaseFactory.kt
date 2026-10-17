@@ -2,8 +2,6 @@ package com.devvault.server.persistence
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import org.flywaydb.core.Flyway
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.Transaction
@@ -42,10 +40,9 @@ class DatabaseFactory(config: DbConfig) : AutoCloseable {
         database = Database.connect(dataSource)
     }
 
-    /** 在 IO 线程中执行一个数据库事务 */
-    suspend fun <T> tx(block: Transaction.() -> T): T = withContext(Dispatchers.IO) {
+    /** 执行一个数据库事务（Spring MVC 为阻塞式处理，直接在请求线程上执行） */
+    fun <T> tx(block: Transaction.() -> T): T =
         transaction(Connection.TRANSACTION_REPEATABLE_READ, readOnly = false, db = database) { block() }
-    }
 
     override fun close() = dataSource.close()
 }

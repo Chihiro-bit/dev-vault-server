@@ -35,7 +35,7 @@ class AuthService(
     @Volatile
     private var pepper: ByteArray? = null
 
-    private suspend fun pepper(): ByteArray = pepper ?: db.tx {
+    private fun pepper(): ByteArray = pepper ?: db.tx {
         MetaRepository.getOrPut("prelogin.pepper") { Crypto.base64(Crypto.randomBytes(32)) }
     }.let { Crypto.decodeBase64(it)!! }.also { pepper = it }
 
@@ -45,7 +45,7 @@ class AuthService(
 
     private fun UserRecord.dto() = UserDto(id = id.toString(), name = displayName, username = username, email = email)
 
-    suspend fun prelogin(rawUsername: String): PreloginResponse {
+    fun prelogin(rawUsername: String): PreloginResponse {
         val username = Validation.normalizeUsername(rawUsername)
         val user = db.tx { UserRepository.findByUsername(username) }
         if (user != null) return PreloginResponse(user.kdf)
@@ -53,7 +53,7 @@ class AuthService(
         return PreloginResponse(DEFAULT_KDF.copy(salt = Crypto.base64(fakeSalt)))
     }
 
-    suspend fun register(req: RegisterRequest): LoginResponse {
+    fun register(req: RegisterRequest): LoginResponse {
         if (!allowRegistration) throw ApiException.forbidden("该服务器未开放注册，请联系管理员")
         val username = Validation.normalizeUsername(req.username)
         val name = Validation.displayName(req.name, username)
@@ -78,7 +78,7 @@ class AuthService(
         return LoginResponse(token, user.dto(), user.kdf, user.vaultKey)
     }
 
-    suspend fun login(req: LoginRequest, ip: String): LoginResponse {
+    fun login(req: LoginRequest, ip: String): LoginResponse {
         val username = Validation.normalizeUsername(req.username)
         throttle.check(username, ip)
         val authKey = Validation.authKey(req.authKey)
@@ -99,7 +99,7 @@ class AuthService(
     }
 
     /** 校验 Bearer 令牌；有效期为滑动窗口，每小时最多续期一次以减少写库 */
-    suspend fun authenticate(token: String): AuthUser? {
+    fun authenticate(token: String): AuthUser? {
         if (token.isBlank() || token.length > 128) return null
         val hash = Crypto.sha256Hex(token)
         return db.tx {
@@ -114,16 +114,16 @@ class AuthService(
         }
     }
 
-    suspend fun me(auth: AuthUser): UserDto =
+    fun me(auth: AuthUser): UserDto =
         db.tx { UserRepository.findById(auth.userId) }?.dto() ?: throw ApiException.unauthorized()
 
-    suspend fun logout(auth: AuthUser) = db.tx { SessionRepository.deleteByTokenHash(auth.tokenHash) }
+    fun logout(auth: AuthUser) = db.tx { SessionRepository.deleteByTokenHash(auth.tokenHash) }
 
     /**
      * 修改主密码：客户端用新密码重新包裹同一个数据密钥，已同步的数据无需重新加密。
      * 成功后其他设备上的登录全部失效。
      */
-    suspend fun changePassword(auth: AuthUser, req: ChangePasswordRequest) {
+    fun changePassword(auth: AuthUser, req: ChangePasswordRequest) {
         val current = Validation.authKey(req.currentAuthKey)
         val kdf = Validation.kdf(req.kdf)
         val authHash = Crypto.hashAuthKey(Validation.authKey(req.authKey))

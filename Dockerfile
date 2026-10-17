@@ -2,12 +2,12 @@
 FROM gradle:8.14.3-jdk17 AS build
 WORKDIR /src
 COPY . .
-RUN gradle :app:installDist --no-daemon --console=plain
+RUN gradle :app:bootJar --no-daemon --console=plain
 
 FROM eclipse-temurin:17-jre
 RUN useradd --system --no-create-home devvault
 WORKDIR /app
-COPY --from=build /src/app/build/install/devvault-server /app
+COPY --from=build /src/app/build/libs/devvault-server.jar /app/app.jar
 USER devvault
 EXPOSE 8080
-ENTRYPOINT ["/app/bin/devvault-server"]
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]

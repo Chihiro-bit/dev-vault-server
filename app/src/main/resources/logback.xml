@@ -8,6 +8,6 @@
         <appender-ref ref="STDOUT"/>
     </root>
     <logger name="com.zaxxer.hikari" level="WARN"/>
-    <logger name="io.netty" level="WARN"/>
     <logger name="Exposed" level="WARN"/>
+    <logger name="org.apache.tomcat" level="WARN"/>
 </configuration>

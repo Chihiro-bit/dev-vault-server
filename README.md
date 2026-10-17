@@ -1,6 +1,6 @@
 # DevVault 服务端
 
-DevVault 客户端的登录与云同步服务。Kotlin + Ktor + MySQL，Gradle 多模块管理。
+DevVault 客户端的登录与云同步服务。Kotlin + Spring Boot + MySQL，Gradle 多模块管理。
 
 **端到端加密**：账号密码和待办在客户端加密后才上传，服务端只保存密文，不接触主密码，也无法解密任何数据。即使服务器或数据库泄露，没有用户的主密码也看不到内容。协议细节见客户端仓库中的 [docs/server-api.md](https://github.com/Chihiro-bit/devvault/blob/main/docs/server-api.md)。
 
@@ -13,7 +13,7 @@ dev-vault-server/
 ├── core/          接口模型、错误类型、校验规则、哈希等加密工具（纯 Kotlin，无框架依赖）
 ├── persistence/   MySQL 连接池（HikariCP）、Flyway 迁移、表映射（Exposed）与仓储
 ├── service/       业务逻辑：注册 / 登录 / 会话 / 修改密码 / 登录限流、同步（拉取与推送）
-└── app/           Ktor HTTP 服务：路由、认证、错误处理、配置，可执行入口
+└── app/           Spring Boot HTTP 服务（Spring MVC）：控制器、鉴权、错误处理、配置，可执行入口
 ```
 
 依赖方向：`app → service → persistence → core`。依赖版本集中在 `gradle/libs.versions.toml`。
@@ -68,17 +68,17 @@ GRANT ALL ON devvault.* TO 'devvault'@'%';
 
 ```bash
 cd dev-vault-server
-./gradlew :app:installDist          # Windows: gradlew.bat :app:installDist
+./gradlew :app:bootJar              # Windows: gradlew.bat :app:bootJar
 export DEVVAULT_DB_URL='jdbc:mysql://127.0.0.1:3306/devvault?serverTimezone=UTC'
 export DEVVAULT_DB_PASSWORD='强密码'
-app/build/install/devvault-server/bin/devvault-server
+java -jar app/build/libs/devvault-server.jar
 ```
 
 首次启动会自动建表（Flyway），后续升级同样自动迁移。
 
 ## 配置
 
-所有配置都在 `app/src/main/resources/application.conf`，可用环境变量覆盖：
+所有配置都在 `app/src/main/resources/application.yml`，可用环境变量覆盖（变量名与原 Ktor 版本保持一致）：
 
 | 环境变量 | 默认值 | 说明 |
 | --- | --- | --- |
@@ -114,7 +114,7 @@ app/build/install/devvault-server/bin/devvault-server
 
 ```bash
 ./gradlew build                     # 编译 + 单元测试
-./gradlew :app:run                  # 本地运行（读取 application.conf 与环境变量）
+./gradlew :app:bootRun              # 本地运行（读取 application.yml 与环境变量）
 ```
 
 集成测试需要一个 MySQL，设置环境变量后运行（未设置时自动跳过）：

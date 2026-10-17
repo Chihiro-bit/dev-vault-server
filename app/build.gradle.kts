@@ -1,10 +1,12 @@
 plugins {
     application
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.kotlin.spring)
+    alias(libs.plugins.spring.boot)
 }
 
 application {
-    mainClass.set("io.ktor.server.netty.EngineMain")
+    mainClass.set("com.devvault.server.app.DevVaultApplicationKt")
     applicationName = "devvault-server"
 }
 
@@ -12,22 +14,20 @@ dependencies {
     implementation(project(":core"))
     implementation(project(":persistence"))
     implementation(project(":service"))
-    implementation(libs.ktor.server.core)
-    implementation(libs.ktor.server.netty)
-    implementation(libs.ktor.server.content.negotiation)
-    implementation(libs.ktor.server.status.pages)
-    implementation(libs.ktor.server.auth)
-    implementation(libs.ktor.server.call.logging)
-    implementation(libs.ktor.server.default.headers)
-    implementation(libs.ktor.server.forwarded.header)
-    implementation(libs.ktor.serialization.json)
+
+    implementation(platform(libs.spring.boot.bom))
+    implementation(libs.spring.boot.starter.web)
+    implementation(libs.jackson.module.kotlin)
+    implementation(libs.kotlin.reflect)
     implementation(libs.logback)
-    testImplementation(libs.ktor.server.test.host)
-    testImplementation(libs.ktor.client.content.negotiation)
+
+    testImplementation(platform(libs.spring.boot.bom))
+    testImplementation(libs.spring.boot.starter.test)
 }
 
-tasks.jar {
-    manifest { attributes("Implementation-Version" to project.version) }
+// 产出固定文件名，便于 Dockerfile 与部署脚本引用
+tasks.bootJar {
+    archiveFileName.set("devvault-server.jar")
 }
 
 tasks.test {

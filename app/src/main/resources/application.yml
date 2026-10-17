@@ -1,0 +1,36 @@
+# DevVault 服务端配置。所有项都可以用环境变量覆盖，变量名与原先保持一致。
+server:
+  address: ${DEVVAULT_HOST:0.0.0.0}
+  port: ${DEVVAULT_PORT:8080}
+
+spring:
+  application:
+    name: devvault-server
+  main:
+    banner-mode: off
+  mvc:
+    # 未匹配到任何接口时抛 NoHandlerFoundException，由 ApiExceptionHandler 返回 {message}
+    throw-exception-if-no-handler-found: true
+  web:
+    resources:
+      add-mappings: false
+
+devvault:
+  # 显示在客户端的服务器名称
+  name: ${DEVVAULT_NAME:DevVault}
+  # 是否开放注册。自建私有服务器可在创建完账号后关闭
+  allow-registration: ${DEVVAULT_ALLOW_REGISTRATION:true}
+  # 登录有效期（天），期间有访问会自动续期
+  session-days: ${DEVVAULT_SESSION_DAYS:30}
+  # 部署在 Nginx 等反向代理之后时设为 true，以从 X-Forwarded-For 读取真实 IP
+  trust-proxy: ${DEVVAULT_TRUST_PROXY:false}
+  db:
+    url: "${DEVVAULT_DB_URL:jdbc:mysql://127.0.0.1:3306/devvault?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC}"
+    user: ${DEVVAULT_DB_USER:devvault}
+    password: ${DEVVAULT_DB_PASSWORD:}
+    pool-size: ${DEVVAULT_DB_POOL_SIZE:10}
+
+logging:
+  level:
+    root: INFO
+    com.devvault: INFO

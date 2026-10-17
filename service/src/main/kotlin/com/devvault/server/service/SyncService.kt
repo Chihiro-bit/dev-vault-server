@@ -20,7 +20,7 @@ import com.devvault.server.persistence.UserRepository
  */
 class SyncService(private val db: DatabaseFactory) {
 
-    suspend fun pull(auth: AuthUser, since: Long, limit: Int): PullResponse {
+    fun pull(auth: AuthUser, since: Long, limit: Int): PullResponse {
         require400(since >= 0) { "since 不合法" }
         val size = limit.coerceIn(1, Validation.MAX_PULL_LIMIT)
         return db.tx {
@@ -33,7 +33,7 @@ class SyncService(private val db: DatabaseFactory) {
         }
     }
 
-    suspend fun push(auth: AuthUser, req: PushRequest): PushResponse {
+    fun push(auth: AuthUser, req: PushRequest): PushResponse {
         require400(req.changes.size <= Validation.MAX_PUSH_CHANGES) { "单次最多推送 ${Validation.MAX_PUSH_CHANGES} 条记录" }
         val changes = req.changes.map(Validation::change)
         require400(changes.distinctBy { it.kind to it.id }.size == changes.size) { "推送中存在重复记录" }
