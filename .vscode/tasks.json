@@ -1,0 +1,64 @@
+{
+  // DevVault 本地开发任务：Ctrl+Shift+B 或 Terminal → Run Task 里选择
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "DevVault: 启动服务（:app:bootRun）",
+      "detail": "连本机 MySQL 127.0.0.1:3307/devvault，监听 127.0.0.1:8080",
+      "type": "shell",
+      "command": "${workspaceFolder}\\gradlew.bat",
+      "args": [":app:bootRun", "--console=plain"],
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "DEVVAULT_DB_URL": "jdbc:mysql://127.0.0.1:3307/devvault?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC",
+          "DEVVAULT_DB_USER": "devvault",
+          "DEVVAULT_DB_PASSWORD": "devvault",
+          "DEVVAULT_HOST": "127.0.0.1",
+          "DEVVAULT_PORT": "8080",
+          "DEVVAULT_TRUST_PROXY": "false"
+        }
+      },
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true }
+    },
+    {
+      "label": "DevVault: 编译 + 单元测试",
+      "type": "shell",
+      "command": "${workspaceFolder}\\gradlew.bat",
+      "args": ["build", "--console=plain"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "DevVault: 集成测试（连 devvault_test）",
+      "detail": "需要 devvault-mysql 容器已启动",
+      "type": "shell",
+      "command": "${workspaceFolder}\\gradlew.bat",
+      "args": ["test", "--console=plain"],
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "DEVVAULT_TEST_DB_URL": "jdbc:mysql://127.0.0.1:3307/devvault_test?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC",
+          "DEVVAULT_TEST_DB_USER": "devvault",
+          "DEVVAULT_TEST_DB_PASSWORD": "devvault"
+        }
+      },
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "DevVault: 启动 MySQL 容器",
+      "type": "shell",
+      "command": "docker start devvault-mysql || docker run -d --name devvault-mysql --restart unless-stopped -p 127.0.0.1:3307:3306 -v devvault-mysql-data:/var/lib/mysql -e MYSQL_DATABASE=devvault_test -e MYSQL_USER=devvault -e MYSQL_PASSWORD=devvault -e MYSQL_ROOT_PASSWORD=root --health-cmd \"mysqladmin ping -h 127.0.0.1 -udevvault -pdevvault\" --health-interval 5s --health-timeout 3s --health-retries 30 mysql:8.4 --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci",
+      "problemMatcher": []
+    },
+    {
+      "label": "DevVault: 停止 MySQL 容器",
+      "type": "shell",
+      "command": "docker stop devvault-mysql",
+      "problemMatcher": []
+    }
+  ]
+}
